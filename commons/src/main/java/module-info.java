@@ -1,0 +1,3 @@
+module commons {
+    exports protocol;
+}
