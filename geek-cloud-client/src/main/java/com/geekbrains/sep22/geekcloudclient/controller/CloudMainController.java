@@ -13,13 +13,19 @@ import java.util.List;
 import java.util.ResourceBundle;
 import static protocol.Constants.*;
 
-public class CloudMainController implements Initializable {
-     public ListView<String> clientView;
+public class CloudMainController implements Initializable{
+    public ListView<String> clientView;
     public ListView<String> serverView;
     private DataInputStream dis;
     private DataOutputStream dos;
     private Socket socket;
     private String currentDir;
+    private DisThread disThread;
+
+
+    public DataInputStream getDis() {
+        return dis;
+    }
 
     public void sendToServer(ActionEvent actionEvent) {
         String fileName = clientView.getSelectionModel().getSelectedItem();
@@ -30,13 +36,9 @@ public class CloudMainController implements Initializable {
                 dos.writeUTF(SEND_FILE_COMMAND);
                 dos.writeUTF(fileName);
                 dos.writeLong(file.length());
-
-                try (FileInputStream fis = new FileInputStream(file);
-                     BufferedInputStream bis = new BufferedInputStream(fis)) {
-                    int i;
-                    while ((i = bis.read()) != -1) {
-                        dos.write(i);
-                    }
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    byte[] bytes = fis.readAllBytes();
+                    dos.write(bytes);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -46,18 +48,25 @@ public class CloudMainController implements Initializable {
 
         }
     }
+    public void getFromServer(ActionEvent actionEvent) {
+    }
 
     private void initNetwork()  {
         try {
             socket = new Socket("localhost", 8189);
             dis = new DataInputStream(socket.getInputStream());
             dos = new DataOutputStream(socket.getOutputStream());
+            disThread = new DisThread(this);
+            disThread.start();
+
         } catch (Exception ignored) {}
     }
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initNetwork();
+//        updateServerView();
         setCurrentDir(System.getProperty("user.home"));
         fillView(clientView, getFiles(currentDir));
         clientView.setOnMouseClicked(mouseEvent -> {
@@ -73,7 +82,7 @@ public class CloudMainController implements Initializable {
         fillView(clientView, getFiles(currentDir));
     }
 
-    private void fillView(ListView<String> view, List<String> data) {
+    public void fillView(ListView<String> view, List<String> data) {
         view.getItems().clear();
         view.getItems().addAll(data);
     }
@@ -98,5 +107,6 @@ public class CloudMainController implements Initializable {
                 setCurrentDir(selectedFile.getAbsolutePath());
             }
     }
+
 
 }

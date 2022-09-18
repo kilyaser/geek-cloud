@@ -17,6 +17,7 @@ public class CloudServer {
 
         try (ServerSocket serverSocket = new ServerSocket(8189)) {
             while (true) {
+                System.out.println("Сервер запущен!");
                 Socket socket = serverSocket.accept();
                 serviceThreadFactory.newThread(new FileHandler(socket)).start();
             }
