@@ -20,6 +20,11 @@ public class CloudMainController implements Initializable{
     private DataOutputStream dos;
     private Socket socket;
     private String currentDir;
+
+    public String getCurrentDir() {
+        return currentDir;
+    }
+
     private DisThread disThread;
 
 
@@ -49,6 +54,13 @@ public class CloudMainController implements Initializable{
         }
     }
     public void getFromServer(ActionEvent actionEvent) {
+        String serverFileName = serverView.getSelectionModel().getSelectedItem();
+            try {
+                dos.writeUTF(GET_FILE);
+                dos.writeUTF(serverFileName);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
     }
 
     private void initNetwork()  {
@@ -87,7 +99,7 @@ public class CloudMainController implements Initializable{
         view.getItems().addAll(data);
     }
 
-    private List<String> getFiles(String directory) {
+    public List<String> getFiles(String directory) {
         File dir = new File(directory);
         if (dir.isDirectory()) {
             String[] listFiles = dir.list();

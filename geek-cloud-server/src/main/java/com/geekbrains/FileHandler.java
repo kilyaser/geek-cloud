@@ -12,7 +12,6 @@ import static protocol.Constants.*;
 
 public class FileHandler implements Runnable {
     private final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss: ");
-    private static final Integer BATCH_SIZE = 256;
     private static final String SERVER_DIR = "server_files";
     private byte[] batch;
     private final Socket socket;
@@ -44,6 +43,7 @@ public class FileHandler implements Runnable {
                 String command = dis.readUTF();
                 switch (command) {
                     case SEND_FILE_COMMAND -> copyToServer();
+                    case GET_FILE -> sendToClient();
                     default -> System.out.println("Unknown command received: " + command);
                 }
 
@@ -54,6 +54,29 @@ public class FileHandler implements Runnable {
             System.out.println(DATE_FORMAT.format(System.currentTimeMillis()) + "Client disconnected...");
         }
 
+    }
+
+    private void sendToClient() {
+        System.out.println("запрос на копирование от клиента");
+        try {
+            String fileName = dis.readUTF();
+            String filePath = SERVER_DIR + DELIMITER + fileName;
+            File file = new File(filePath);
+            if (file.isFile()) {
+                dos.writeUTF(SEND_FILE_COMMAND);
+                dos.writeUTF(fileName);
+                dos.writeLong(file.length());
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    byte[] bytes = fis.readAllBytes();
+                    dos.write(bytes);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void sendServerView() {
