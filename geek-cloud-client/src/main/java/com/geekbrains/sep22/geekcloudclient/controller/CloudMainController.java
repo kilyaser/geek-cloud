@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import static protocol.Constants.*;
+import static protocol.FileUtils.readFileFromStream;
+import static protocol.FileUtils.writeFileToStream;
 
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
@@ -28,24 +30,7 @@ public class CloudMainController implements Initializable{
     public void sendToServer(ActionEvent actionEvent) {
         String fileName = clientView.getSelectionModel().getSelectedItem();
         String filePath = currentDir + DELIMITER + fileName;
-        File file = new File(filePath);
-        if (file.isFile()) {
-            try {
-                System.out.printf("File %s sent to server", fileName);
-                dos.writeUTF(SEND_FILE_COMMAND);
-                dos.writeUTF(fileName);
-                dos.writeLong(file.length());
-                try (FileInputStream fis = new FileInputStream(file)) {
-                    byte[] bytes = fis.readAllBytes();
-                    dos.write(bytes);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            } catch (Exception e) {
-                System.err.println("e = " + e.getMessage());
-            }
-
-        }
+        writeFileToStream(dos, fileName, filePath);
     }
 
     private void readMassages() {
@@ -54,14 +39,16 @@ public class CloudMainController implements Initializable{
                 String command = dis.readUTF();
                 System.out.println("Received command: " + command);
                 switch (command) {
-                   // case SEND_FILE_COMMAND -> //TO DO
+                    case SEND_FILE_COMMAND -> {
+                        readFileFromStream(dis, currentDir);
+                        Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
+                    }
                     case UPDATE_VIEW -> updateServerView();
                 }
             }
         } catch (IOException e) {
             System.out.printf("Server off %s", e.getMessage());
         }
-
     }
 
     public void getFromServer(ActionEvent actionEvent) {
@@ -69,6 +56,7 @@ public class CloudMainController implements Initializable{
             try {
                 dos.writeUTF(GET_FILE);
                 dos.writeUTF(serverFileName);
+                dos.flush();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -83,7 +71,9 @@ public class CloudMainController implements Initializable{
             factory.getThread(this::readMassages,
                     "cloud-client-read-thread-%")
                     .start();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -98,7 +88,6 @@ public class CloudMainController implements Initializable{
                actionSelected();
             }
         });
-
     }
 
     private void setCurrentDir(String dir) {
@@ -131,13 +120,12 @@ public class CloudMainController implements Initializable{
                 setCurrentDir(selectedFile.getAbsolutePath());
             }
     }
-    private void updateServerView() throws IOException {
 
+    private void updateServerView() throws IOException {
         List<String> files = new ArrayList<>();
         int size = dis.readInt();
         for (int i = 0; i < size; i++) {
             String file = dis.readUTF();
-            System.out.printf("Получен файл %s", file);
             files.add(file);
         }
         Platform.runLater(() -> fillView(serverView, files));
