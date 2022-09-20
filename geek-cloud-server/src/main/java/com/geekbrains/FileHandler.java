@@ -5,7 +5,6 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static protocol.Constants.*;
@@ -29,26 +28,23 @@ public class FileHandler implements Runnable {
         if (!file.exists()) {
             file.mkdir();
         }
+        sendServerFiles();
         System.out.println(DATE_FORMAT.format(System.currentTimeMillis()) + "client accepted...");
     }
 
 
     @Override
     public void run() {
-        System.out.println(DATE_FORMAT.format(System.currentTimeMillis()) + "send server view");
-        sendServerView();
         try {
             System.out.println(DATE_FORMAT.format(System.currentTimeMillis()) + "Start listening...");
             while (true) {
                 String command = dis.readUTF();
+                System.out.println("Received command: " + command);
                 switch (command) {
                     case SEND_FILE_COMMAND -> copyToServer();
                     case GET_FILE -> sendToClient();
                     default -> System.out.println("Unknown command received: " + command);
                 }
-
-
-
             }
         } catch (Exception ignored) {
             System.out.println(DATE_FORMAT.format(System.currentTimeMillis()) + "Client disconnected...");
@@ -79,22 +75,16 @@ public class FileHandler implements Runnable {
         }
     }
 
-    private void sendServerView() {
-        serverView.clear();
-        serverView = updateServerView();
-        System.out.println(serverView);
-        try {
-            dos.writeUTF(UPDATE_VIEW);
-            for (String fileName : serverView) {
-                dos.writeUTF(fileName);
-                System.out.printf("%s отправлен\n", fileName);
-            }
-            dos.writeUTF(END);
-
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    private void sendServerFiles() throws IOException {
+        File dir = new File(SERVER_DIR);
+        String[] files = dir.list();
+        assert files != null;
+        dos.writeUTF(UPDATE_VIEW);
+        dos.writeInt(files.length);
+        for (String file : files) {
+            dos.writeUTF(file);
         }
+        System.out.println(files.length + " files sent to client");
     }
 
     private void copyToServer() throws IOException {
@@ -106,20 +96,6 @@ public class FileHandler implements Runnable {
                 fos.write(batch, 0, read);
             }
         } catch (Exception ignored) {}
-        sendServerView();
-    }
-
-    private List<String> updateServerView() {
-        File dir = new File(SERVER_DIR);
-        if (dir.isDirectory()) {
-            String[] listFiles = dir.list();
-            if (listFiles != null) {
-                List<String> files = new ArrayList<>(Arrays.asList(listFiles));
-                files.add(0, "..");
-                return files;
-            }
-        }
-        return List.of("..");
-
+        sendServerFiles();
     }
 }
