@@ -1,8 +1,10 @@
 package com.geekbrains.sep22.geekcloudclient.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import protocol.DaemonThreadFactory;
 
 import java.io.*;
 import java.net.Socket;
@@ -12,39 +14,52 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import static protocol.Constants.*;
+import static protocol.FileUtils.readFileFromStream;
+import static protocol.FileUtils.writeFileToStream;
 
-public class CloudMainController implements Initializable {
-     public ListView<String> clientView;
+public class CloudMainController implements Initializable{
+    public ListView<String> clientView;
     public ListView<String> serverView;
     private DataInputStream dis;
     private DataOutputStream dos;
     private Socket socket;
     private String currentDir;
+    private boolean isReadMessages = true;
+    private DaemonThreadFactory factory;
 
     public void sendToServer(ActionEvent actionEvent) {
         String fileName = clientView.getSelectionModel().getSelectedItem();
         String filePath = currentDir + DELIMITER + fileName;
-        File file = new File(filePath);
-        if (file.isFile()) {
-            try {
-                dos.writeUTF(SEND_FILE_COMMAND);
-                dos.writeUTF(fileName);
-                dos.writeLong(file.length());
+        writeFileToStream(dos, fileName, filePath);
+    }
 
-                try (FileInputStream fis = new FileInputStream(file);
-                     BufferedInputStream bis = new BufferedInputStream(fis)) {
-                    int i;
-                    while ((i = bis.read()) != -1) {
-                        dos.write(i);
+    private void readMassages() {
+        try {
+            while (isReadMessages) {
+                String command = dis.readUTF();
+                System.out.println("Received command: " + command);
+                switch (command) {
+                    case SEND_FILE_COMMAND -> {
+                        readFileFromStream(dis, currentDir);
+                        Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    case UPDATE_VIEW -> updateServerView();
                 }
-            } catch (Exception e) {
-                System.err.println("e = " + e.getMessage());
             }
-
+        } catch (IOException e) {
+            System.out.printf("Server off %s", e.getMessage());
         }
+    }
+
+    public void getFromServer(ActionEvent actionEvent) {
+        String serverFileName = serverView.getSelectionModel().getSelectedItem();
+            try {
+                dos.writeUTF(GET_FILE);
+                dos.writeUTF(serverFileName);
+                dos.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
     }
 
     private void initNetwork()  {
@@ -52,11 +67,19 @@ public class CloudMainController implements Initializable {
             socket = new Socket("localhost", 8189);
             dis = new DataInputStream(socket.getInputStream());
             dos = new DataOutputStream(socket.getOutputStream());
-        } catch (Exception ignored) {}
+
+            factory.getThread(this::readMassages,
+                    "cloud-client-read-thread-%")
+                    .start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        isReadMessages = true;
+        factory = new DaemonThreadFactory();
         initNetwork();
         setCurrentDir(System.getProperty("user.home"));
         fillView(clientView, getFiles(currentDir));
@@ -65,7 +88,6 @@ public class CloudMainController implements Initializable {
                actionSelected();
             }
         });
-
     }
 
     private void setCurrentDir(String dir) {
@@ -73,12 +95,12 @@ public class CloudMainController implements Initializable {
         fillView(clientView, getFiles(currentDir));
     }
 
-    private void fillView(ListView<String> view, List<String> data) {
+    public void fillView(ListView<String> view, List<String> data) {
         view.getItems().clear();
         view.getItems().addAll(data);
     }
 
-    private List<String> getFiles(String directory) {
+    public List<String> getFiles(String directory) {
         File dir = new File(directory);
         if (dir.isDirectory()) {
             String[] listFiles = dir.list();
@@ -99,4 +121,13 @@ public class CloudMainController implements Initializable {
             }
     }
 
+    private void updateServerView() throws IOException {
+        List<String> files = new ArrayList<>();
+        int size = dis.readInt();
+        for (int i = 0; i < size; i++) {
+            String file = dis.readUTF();
+            files.add(file);
+        }
+        Platform.runLater(() -> fillView(serverView, files));
+    }
 }

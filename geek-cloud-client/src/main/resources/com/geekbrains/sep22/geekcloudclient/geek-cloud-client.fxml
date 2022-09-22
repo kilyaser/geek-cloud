@@ -11,6 +11,6 @@ fx:controller="com.geekbrains.sep22.geekcloudclient.controller.CloudMainControll
       <ListView fx:id="clientView" layoutX="14.0" layoutY="28.0" prefHeight="413.0" prefWidth="281.0" />
       <ListView fx:id="serverView" layoutX="347.0" layoutY="28.0" prefHeight="413.0" prefWidth="281.0" />
       <Button onAction="#sendToServer" layoutX="309.0" layoutY="78.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="&gt;" />
-      <Button layoutX="309.0" layoutY="121.0" mnemonicParsing="false" text="&lt;" />
+      <Button onAction="#getFromServer" layoutX="309.0" layoutY="121.0" mnemonicParsing="false" text="&lt;" />
    </children>
 </AnchorPane>
