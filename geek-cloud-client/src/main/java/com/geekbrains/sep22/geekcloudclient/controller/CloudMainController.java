@@ -1,62 +1,68 @@
 package com.geekbrains.sep22.geekcloudclient.controller;
 
+import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
+import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import protocol.DaemonThreadFactory;
+import protocol.model.*;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import static protocol.Constants.*;
-import static protocol.FileUtils.readFileFromStream;
-import static protocol.FileUtils.writeFileToStream;
+
 
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
     public ListView<String> serverView;
-    private DataInputStream dis;
-    private DataOutputStream dos;
     private Socket socket;
     private String currentDir;
+    private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
     private boolean isReadMessages = true;
     private DaemonThreadFactory factory;
 
-    public void sendToServer(ActionEvent actionEvent) {
+    public void sendToServer(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
-        String filePath = currentDir + DELIMITER + fileName;
-        writeFileToStream(dos, fileName, filePath);
+        network.getOutputStream().writeObject(new FileMessage(Path.of(currentDir).resolve(fileName)));
     }
 
     private void readMassages() {
         try {
             while (isReadMessages) {
-                String command = dis.readUTF();
-                System.out.println("Received command: " + command);
-                switch (command) {
-                    case SEND_FILE_COMMAND -> {
-                        readFileFromStream(dis, currentDir);
+                CloudMessage message = (CloudMessage) network.getInputStream().readObject();
+                System.out.println("Received command: " + message.getType());
+                switch (message.getType()) {
+                    case FILE -> {
+                        FileMessage fm = (FileMessage)message;
+                        Files.write(Path.of(currentDir), fm.getBytes());
                         Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
                     }
-                    case UPDATE_VIEW -> updateServerView();
+                    case LIST -> {
+                        ListMessage lm = (ListMessage) message;
+                        Platform.runLater(() -> fillView(serverView, lm.getFiles()));
+                    }
                 }
             }
         } catch (IOException e) {
             System.out.printf("Server off %s", e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public void getFromServer(ActionEvent actionEvent) {
-        String serverFileName = serverView.getSelectionModel().getSelectedItem();
+        String fileName = serverView.getSelectionModel().getSelectedItem();
             try {
-                dos.writeUTF(GET_FILE);
-                dos.writeUTF(serverFileName);
-                dos.flush();
+                network.getOutputStream().writeObject(new FileRequest(fileName));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -65,9 +71,10 @@ public class CloudMainController implements Initializable{
     private void initNetwork()  {
         try {
             socket = new Socket("localhost", 8189);
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
-
+            network = new Network<>(
+                    new ObjectDecoderInputStream(socket.getInputStream()),
+                    new ObjectEncoderOutputStream(socket.getOutputStream())
+            );
             factory.getThread(this::readMassages,
                     "cloud-client-read-thread-%")
                     .start();
@@ -121,13 +128,13 @@ public class CloudMainController implements Initializable{
             }
     }
 
-    private void updateServerView() throws IOException {
-        List<String> files = new ArrayList<>();
-        int size = dis.readInt();
-        for (int i = 0; i < size; i++) {
-            String file = dis.readUTF();
-            files.add(file);
-        }
-        Platform.runLater(() -> fillView(serverView, files));
-    }
+//    private void updateServerView() throws IOException {
+//        List<String> files = new ArrayList<>();
+//        int size = network.getInputStream().readInt();
+//        for (int i = 0; i < size; i++) {
+//            String file = network.getInputStream().readUTF();
+//            files.add(file);
+//        }
+//        Platform.runLater(() -> fillView(serverView, files));
+//    }
 }
