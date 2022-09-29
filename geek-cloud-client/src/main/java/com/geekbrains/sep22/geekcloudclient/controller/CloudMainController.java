@@ -95,9 +95,14 @@ public class CloudMainController implements Initializable{
                actionSelected();
             }
         });
+        serverView.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getClickCount() == 2) {
+                serverActionSelected();
+            }
+        });
     }
 
-    private void setCurrentDir(String dir) {
+      private void setCurrentDir(String dir) {
         currentDir = dir;
         fillView(clientView, getFiles(currentDir));
     }
@@ -127,14 +132,12 @@ public class CloudMainController implements Initializable{
                 setCurrentDir(selectedFile.getAbsolutePath());
             }
     }
-
-//    private void updateServerView() throws IOException {
-//        List<String> files = new ArrayList<>();
-//        int size = network.getInputStream().readInt();
-//        for (int i = 0; i < size; i++) {
-//            String file = network.getInputStream().readUTF();
-//            files.add(file);
-//        }
-//        Platform.runLater(() -> fillView(serverView, files));
-//    }
+    private void serverActionSelected() {
+        String fileName = serverView.getSelectionModel().getSelectedItem();
+        try {
+            network.getOutputStream().writeObject(new ViewRequest(fileName));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

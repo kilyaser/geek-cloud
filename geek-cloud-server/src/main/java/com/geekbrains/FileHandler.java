@@ -4,6 +4,10 @@ import java.io.*;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static protocol.Constants.*;
 import static protocol.FileUtils.readFileFromStream;
 import static protocol.FileUtils.writeFileToStream;
@@ -50,13 +54,18 @@ public class FileHandler implements Runnable {
 
     private void sendServerFiles() throws IOException {
         File dir = new File(SERVER_DIR);
-        String[] files = dir.list();
-        assert files != null;
-        dos.writeUTF(UPDATE_VIEW);
-        dos.writeInt(files.length);
-        for (String file : files) {
-            dos.writeUTF(file);
+        if (dir.isDirectory()) {
+            String[] files = dir.list();
+            if (files != null) {
+                List<String> listFiles = new ArrayList<>(Arrays.asList(files));
+                dos.writeUTF(UPDATE_VIEW);
+                listFiles.add(0, "..");
+                dos.writeInt(listFiles.size());
+                for (String file : listFiles) {
+                    dos.writeUTF(file);
+                }
+            }
         }
-        System.out.println(files.length + " files sent to client");
+
     }
 }
