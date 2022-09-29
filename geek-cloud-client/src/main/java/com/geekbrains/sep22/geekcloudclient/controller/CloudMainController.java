@@ -43,7 +43,7 @@ public class CloudMainController implements Initializable{
                 switch (message.getType()) {
                     case FILE -> {
                         FileMessage fm = (FileMessage)message;
-                        Files.write(Path.of(currentDir), fm.getBytes());
+                        Files.write(Path.of(currentDir).resolve(fm.getFileName()), fm.getBytes());
                         Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
                     }
                     case LIST -> {
