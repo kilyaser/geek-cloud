@@ -5,7 +5,10 @@ import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import protocol.DaemonThreadFactory;
 import protocol.model.*;
 
@@ -14,16 +17,15 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
+
 import static protocol.Constants.*;
 
 
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
     public ListView<String> serverView;
+    public MenuItem handleRename;
     private Socket socket;
     private String currentDir;
     private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
@@ -101,6 +103,35 @@ public class CloudMainController implements Initializable{
             }
         });
     }
+    public void handleRename(ActionEvent actionEvent) {
+        //Do rename action
+    }
+
+    public void handleDeleteFileOption(ActionEvent actionEvent) throws IOException {
+        String fileName = clientView.getSelectionModel().getSelectedItem();
+        Alert infoAlert = new Alert(Alert.AlertType.INFORMATION);
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Deleting file");
+        alert.setContentText("Are you sure want to delete the file " + fileName + " ?");
+
+        Optional<ButtonType> answer = alert.showAndWait();
+        if (answer.get() == ButtonType.OK) {
+            Path path = Path.of(currentDir + DELIMITER + fileName);
+            if (Files.exists(path)) {
+                Files.delete(path);
+                Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
+                infoAlert.setTitle("Deleting file");
+                infoAlert.setContentText("file " + fileName + " was deleted");
+                infoAlert.showAndWait();
+            }
+        } else {
+            infoAlert.setTitle("Deletion cancelled");
+            infoAlert.setContentText("Deletion process cancelled");
+            infoAlert.showAndWait();
+        }
+
+    }
 
       private void setCurrentDir(String dir) {
         currentDir = dir;
@@ -140,4 +171,6 @@ public class CloudMainController implements Initializable{
             throw new RuntimeException(e);
         }
     }
+
+
 }
