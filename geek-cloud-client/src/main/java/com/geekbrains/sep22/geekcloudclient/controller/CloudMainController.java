@@ -9,6 +9,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import protocol.AssistanceAlertUtils;
 import protocol.DaemonThreadFactory;
 import protocol.model.*;
 
@@ -103,34 +104,29 @@ public class CloudMainController implements Initializable{
             }
         });
     }
-    public void handleRename(ActionEvent actionEvent) {
-        //Do rename action
-    }
+
 
     public void handleDeleteFileOption(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
-        Alert infoAlert = new Alert(Alert.AlertType.INFORMATION);
-
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Deleting file");
-        alert.setContentText("Are you sure want to delete the file " + fileName + " ?");
-
+        Alert infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, true);
+        Alert alert = AssistanceAlertUtils.getWarningConfirm(fileName);
         Optional<ButtonType> answer = alert.showAndWait();
         if (answer.get() == ButtonType.OK) {
             Path path = Path.of(currentDir + DELIMITER + fileName);
             if (Files.exists(path)) {
                 Files.delete(path);
                 Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
-                infoAlert.setTitle("Deleting file");
-                infoAlert.setContentText("file " + fileName + " was deleted");
                 infoAlert.showAndWait();
             }
         } else {
-            infoAlert.setTitle("Deletion cancelled");
-            infoAlert.setContentText("Deletion process cancelled");
+            infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, false);
             infoAlert.showAndWait();
         }
 
+    }
+    public void handleServerFileDeleteOption(ActionEvent actionEvent) throws IOException {
+        String fileName = serverView.getSelectionModel().getSelectedItem();
+        network.getOutputStream().writeObject(new DeleteRequest(fileName));
     }
 
       private void setCurrentDir(String dir) {
@@ -173,4 +169,9 @@ public class CloudMainController implements Initializable{
     }
 
 
+    public void handleServerFileRenameOption(ActionEvent actionEvent) {
+    }
+
+    public void handleFileRenameOption(ActionEvent actionEvent) {
+    }
 }

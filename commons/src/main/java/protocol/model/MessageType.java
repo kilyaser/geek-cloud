@@ -4,6 +4,7 @@ public enum MessageType {
     LIST,
     FILE_REQUEST,
     FILE,
-    VIEW
+    VIEW,
+    DELETE
 
 }

@@ -20,7 +20,7 @@
          <contextMenu>
             <ContextMenu>
               <items>
-                  <MenuItem mnemonicParsing="false" text="Rename" />
+                  <MenuItem mnemonicParsing="false" onAction="#handleFileRenameOption" text="Rename" />
                   <MenuItem mnemonicParsing="false" text="Download" />
                   <MenuItem mnemonicParsing="false" onAction="#handleDeleteFileOption" text="Delete" />
               </items>
@@ -30,9 +30,9 @@
          <contextMenu>
             <ContextMenu>
                <items>
-                  <MenuItem fx:id="handleRename" mnemonicParsing="false" onAction="#handleRename" text="Rename" />
+                  <MenuItem mnemonicParsing="false" onAction="#handleServerFileRenameOption" text="Rename" />
                   <MenuItem mnemonicParsing="false" text="Download" />
-                  <MenuItem mnemonicParsing="false" text="Delete" />
+                  <MenuItem mnemonicParsing="false" onAction="#handleServerFileDeleteOption" text="Delete" />
                </items>
             </ContextMenu>
          </contextMenu></ListView>
