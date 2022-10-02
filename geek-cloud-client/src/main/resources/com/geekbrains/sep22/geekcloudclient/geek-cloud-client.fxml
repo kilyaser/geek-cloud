@@ -13,7 +13,7 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="605.0" prefWidth="906.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.geekbrains.sep22.geekcloudclient.controller.CloudMainController">
    <children>
-      <ListView fx:id="clientView" layoutX="6.0" layoutY="70.0" prefHeight="530.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="6.0" AnchorPane.rightAnchor="470.0" AnchorPane.topAnchor="70.0">
+      <ListView fx:id="clientView" layoutX="6.0" layoutY="70.0" onEditCommit="#changeFileNameCellEvent" prefHeight="530.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="6.0" AnchorPane.topAnchor="70.0">
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </padding>
@@ -26,7 +26,7 @@
               </items>
             </ContextMenu>
          </contextMenu></ListView>
-      <ListView fx:id="serverView" layoutX="470.0" layoutY="70.0" prefHeight="530.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.rightAnchor="6.0" AnchorPane.topAnchor="70.0">
+      <ListView fx:id="serverView" layoutX="470.0" layoutY="70.0" prefHeight="530.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="470.0" AnchorPane.rightAnchor="6.0" AnchorPane.topAnchor="70.0">
          <contextMenu>
             <ContextMenu>
                <items>
@@ -50,7 +50,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Edit">
             <items>
-              <MenuItem mnemonicParsing="false" text="Delete" />
+              <MenuItem mnemonicParsing="false" onAction="#handleDeleteFileOption" text="Delete" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">

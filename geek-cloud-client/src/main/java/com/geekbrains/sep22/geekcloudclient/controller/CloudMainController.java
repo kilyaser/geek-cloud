@@ -5,10 +5,8 @@ import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldListCell;
 import protocol.AssistanceAlertUtils;
 import protocol.DaemonThreadFactory;
 import protocol.model.*;
@@ -26,7 +24,6 @@ import static protocol.Constants.*;
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
     public ListView<String> serverView;
-    public MenuItem handleRename;
     private Socket socket;
     private String currentDir;
     private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
@@ -103,8 +100,14 @@ public class CloudMainController implements Initializable{
                 serverActionSelected();
             }
         });
+       clientView.setEditable(true);
+       clientView.setCellFactory(TextFieldListCell.forListView());
+       clientView.setOnEditCommit(this::changeFileNameCellEvent);
+       
+       serverView.setEditable(true);
+       serverView.setCellFactory(TextFieldListCell.forListView());
+       serverView.setOnEditCommit(this::changeServerFileNameCellEvent);
     }
-
 
     public void handleDeleteFileOption(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
@@ -122,7 +125,6 @@ public class CloudMainController implements Initializable{
             infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, false);
             infoAlert.showAndWait();
         }
-
     }
     public void handleServerFileDeleteOption(ActionEvent actionEvent) throws IOException {
         String fileName = serverView.getSelectionModel().getSelectedItem();
@@ -168,10 +170,30 @@ public class CloudMainController implements Initializable{
         }
     }
 
-
     public void handleServerFileRenameOption(ActionEvent actionEvent) {
+        serverView.edit(serverView.getSelectionModel().getSelectedIndex());
     }
 
     public void handleFileRenameOption(ActionEvent actionEvent) {
+        clientView.edit(clientView.getSelectionModel().getSelectedIndex());
+    }
+
+    public void changeFileNameCellEvent(ListView.EditEvent<String> stringEditEvent) {
+        String fileName = clientView.getSelectionModel().getSelectedItem();
+        File file = new File(currentDir + DELIMITER +  fileName);
+        File newFile = new File(currentDir + DELIMITER + stringEditEvent.getNewValue());
+        if (file.renameTo(newFile)) {
+            System.out.printf("File %s is renamed, new name is %s\n", fileName, stringEditEvent.getNewValue());
+        }
+        Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
+    }
+    private void changeServerFileNameCellEvent(ListView.EditEvent<String> stringEditEvent) {
+        String oldFileName = serverView.getSelectionModel().getSelectedItem();
+        String newFileName = stringEditEvent.getNewValue();
+        try {
+            network.getOutputStream().writeObject(new RenameRequest(oldFileName, newFileName));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

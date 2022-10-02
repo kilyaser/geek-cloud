@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import protocol.AssistanceAlertUtils;
 import protocol.model.*;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -67,10 +68,17 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
 //                    infoAlert = AssistanceAlertUtils.getInformationAlert(deleteRequest.getFilename(), false);
 //                    infoAlert.showAndWait();
 //                }
-
-
-
-
+            }
+            case RENAME -> {
+                RenameRequest renameRequest = (RenameRequest) cloudMessage;
+                File file = new File(serverDir + DELIMITER + renameRequest.getOldFileName());
+                File newFileName = new File(serverDir + DELIMITER + renameRequest.getNewFileName());
+                if (file.renameTo(newFileName)) {
+                    ctx.writeAndFlush(new ListMessage(serverDir));
+                    log.debug(file.getName() + "was rename to " + newFileName.getName());
+                } else {
+                    log.debug("rename file was failed");
+                }
             }
         }
     }
