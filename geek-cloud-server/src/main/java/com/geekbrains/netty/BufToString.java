@@ -16,7 +16,6 @@ public class BufToString extends ChannelInboundHandlerAdapter {
         while (buf.isReadable()) {
             s.append((char) buf.readByte());
         }
-
         ctx.fireChannelRead(s.toString());
     }
 }

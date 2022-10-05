@@ -5,7 +5,9 @@ import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldListCell;
+import protocol.AssistanceAlertUtils;
 import protocol.DaemonThreadFactory;
 import protocol.model.*;
 
@@ -14,10 +16,8 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
+
 import static protocol.Constants.*;
 
 
@@ -95,9 +95,43 @@ public class CloudMainController implements Initializable{
                actionSelected();
             }
         });
+        serverView.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getClickCount() == 2) {
+                serverActionSelected();
+            }
+        });
+       clientView.setEditable(true);
+       clientView.setCellFactory(TextFieldListCell.forListView());
+       clientView.setOnEditCommit(this::changeFileNameCellEvent);
+       
+       serverView.setEditable(true);
+       serverView.setCellFactory(TextFieldListCell.forListView());
+       serverView.setOnEditCommit(this::changeServerFileNameCellEvent);
     }
 
-    private void setCurrentDir(String dir) {
+    public void handleDeleteFileOption(ActionEvent actionEvent) throws IOException {
+        String fileName = clientView.getSelectionModel().getSelectedItem();
+        Alert infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, true);
+        Alert alert = AssistanceAlertUtils.getWarningConfirm(fileName);
+        Optional<ButtonType> answer = alert.showAndWait();
+        if (answer.get() == ButtonType.OK) {
+            Path path = Path.of(currentDir + DELIMITER + fileName);
+            if (Files.exists(path)) {
+                Files.delete(path);
+                Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
+                infoAlert.showAndWait();
+            }
+        } else {
+            infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, false);
+            infoAlert.showAndWait();
+        }
+    }
+    public void handleServerFileDeleteOption(ActionEvent actionEvent) throws IOException {
+        String fileName = serverView.getSelectionModel().getSelectedItem();
+        network.getOutputStream().writeObject(new DeleteRequest(fileName));
+    }
+
+      private void setCurrentDir(String dir) {
         currentDir = dir;
         fillView(clientView, getFiles(currentDir));
     }
@@ -127,14 +161,39 @@ public class CloudMainController implements Initializable{
                 setCurrentDir(selectedFile.getAbsolutePath());
             }
     }
+    private void serverActionSelected() {
+        String fileName = serverView.getSelectionModel().getSelectedItem();
+        try {
+            network.getOutputStream().writeObject(new ViewRequest(fileName));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-//    private void updateServerView() throws IOException {
-//        List<String> files = new ArrayList<>();
-//        int size = network.getInputStream().readInt();
-//        for (int i = 0; i < size; i++) {
-//            String file = network.getInputStream().readUTF();
-//            files.add(file);
-//        }
-//        Platform.runLater(() -> fillView(serverView, files));
-//    }
+    public void handleServerFileRenameOption(ActionEvent actionEvent) {
+        serverView.edit(serverView.getSelectionModel().getSelectedIndex());
+    }
+
+    public void handleFileRenameOption(ActionEvent actionEvent) {
+        clientView.edit(clientView.getSelectionModel().getSelectedIndex());
+    }
+
+    public void changeFileNameCellEvent(ListView.EditEvent<String> stringEditEvent) {
+        String fileName = clientView.getSelectionModel().getSelectedItem();
+        File file = new File(currentDir + DELIMITER +  fileName);
+        File newFile = new File(currentDir + DELIMITER + stringEditEvent.getNewValue());
+        if (file.renameTo(newFile)) {
+            System.out.printf("File %s is renamed, new name is %s\n", fileName, stringEditEvent.getNewValue());
+        }
+        Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
+    }
+    private void changeServerFileNameCellEvent(ListView.EditEvent<String> stringEditEvent) {
+        String oldFileName = serverView.getSelectionModel().getSelectedItem();
+        String newFileName = stringEditEvent.getNewValue();
+        try {
+            network.getOutputStream().writeObject(new RenameRequest(oldFileName, newFileName));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
