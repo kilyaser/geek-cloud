@@ -4,6 +4,8 @@ import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -24,6 +26,11 @@ import static protocol.Constants.*;
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
     public ListView<String> serverView;
+    @FXML
+    public Label l_well_username;
+
+    @FXML
+    public Button button_log_out;
     private Socket socket;
     private String currentDir;
     private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
@@ -50,6 +57,10 @@ public class CloudMainController implements Initializable{
                         ListMessage lm = (ListMessage) message;
                         Platform.runLater(() -> fillView(serverView, lm.getFiles()));
                     }
+                    case AlERT -> {
+                        AlertMessage alertMessage = (AlertMessage) message;
+                        Platform.runLater(() -> getConfirmation(alertMessage.getFilename(), alertMessage.isResult()));
+                    }
                 }
             }
         } catch (IOException e) {
@@ -58,6 +69,8 @@ public class CloudMainController implements Initializable{
             throw new RuntimeException(e);
         }
     }
+
+
 
     public void getFromServer(ActionEvent actionEvent) {
         String fileName = serverView.getSelectionModel().getSelectedItem();
@@ -100,6 +113,10 @@ public class CloudMainController implements Initializable{
                 serverActionSelected();
             }
         });
+        button_log_out.setOnAction(event ->
+                DBUtils.changScene(event,
+                        "auth_page_client.fxml",
+                        "Log in", null));
        clientView.setEditable(true);
        clientView.setCellFactory(TextFieldListCell.forListView());
        clientView.setOnEditCommit(this::changeFileNameCellEvent);
@@ -126,9 +143,30 @@ public class CloudMainController implements Initializable{
             infoAlert.showAndWait();
         }
     }
+    public void getConfirmation(String fileName, boolean result)  {
+        Alert infoAlert;
+        if (result) {
+            infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, result);
+            infoAlert.showAndWait();
+            return;
+        }
+
+        Alert alert = AssistanceAlertUtils.getWarningConfirm(fileName);
+        Optional<ButtonType> answer = alert.showAndWait();
+        if (answer.get() == ButtonType.OK) {
+            try {
+                network.getOutputStream().writeObject(new DeleteRequest(fileName, true));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, false);
+            infoAlert.showAndWait();
+        }
+    }
     public void handleServerFileDeleteOption(ActionEvent actionEvent) throws IOException {
         String fileName = serverView.getSelectionModel().getSelectedItem();
-        network.getOutputStream().writeObject(new DeleteRequest(fileName));
+        network.getOutputStream().writeObject(new DeleteRequest(fileName, false));
     }
 
       private void setCurrentDir(String dir) {
@@ -195,5 +233,8 @@ public class CloudMainController implements Initializable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    public void setUserInformation(String username) {
+        l_well_username.setText("Welcome " + username + "!");
     }
 }

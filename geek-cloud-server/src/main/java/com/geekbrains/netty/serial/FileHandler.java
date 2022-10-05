@@ -2,16 +2,12 @@ package com.geekbrains.netty.serial;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import lombok.extern.slf4j.Slf4j;
-import protocol.AssistanceAlertUtils;
 import protocol.model.*;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
+
 
 import static protocol.Constants.DELIMITER;
 
@@ -51,23 +47,16 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
                 DeleteRequest deleteRequest = (DeleteRequest) cloudMessage;
                 Path path = Path.of(serverDir + DELIMITER + deleteRequest.getFilename());
                 log.debug("Received file for delete {}", path);
-//                Alert infoAlert = AssistanceAlertUtils.getInformationAlert(deleteRequest.getFilename(), true);
-//                Alert alert = AssistanceAlertUtils.getWarningConfirm(deleteRequest.getFilename());
-//                Optional<ButtonType> answer = alert.showAndWait();
-//                if (answer.get() == ButtonType.OK) {
+
+                if (deleteRequest.isConfirm()) {
                     if (Files.exists(path)) {
                         Files.delete(path);
                         ctx.writeAndFlush(new ListMessage(serverDir));
-//                        infoAlert.showAndWait();
-                    } else {
-                        log.debug("Received file {} didn't exist", deleteRequest.getFilename());
-//                        infoAlert.setContentText("You should choose file");
-//                        infoAlert.showAndWait();
+                        ctx.writeAndFlush(new AlertMessage(deleteRequest.getFilename(), true));
                     }
-//                } else {
-//                    infoAlert = AssistanceAlertUtils.getInformationAlert(deleteRequest.getFilename(), false);
-//                    infoAlert.showAndWait();
-//                }
+                } else {
+                    ctx.writeAndFlush(new AlertMessage(deleteRequest.getFilename(), false));
+                }
             }
             case RENAME -> {
                 RenameRequest renameRequest = (RenameRequest) cloudMessage;
