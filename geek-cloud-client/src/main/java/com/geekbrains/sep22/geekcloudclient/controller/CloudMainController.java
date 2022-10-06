@@ -4,7 +4,6 @@ import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -23,6 +22,7 @@ import java.util.*;
 import static protocol.Constants.*;
 
 
+
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
     public ListView<String> serverView;
@@ -36,6 +36,7 @@ public class CloudMainController implements Initializable{
     private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
     private boolean isReadMessages = true;
     private DaemonThreadFactory factory;
+
 
     public void sendToServer(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
@@ -51,6 +52,7 @@ public class CloudMainController implements Initializable{
                     case FILE -> {
                         FileMessage fm = (FileMessage)message;
                         Files.write(Path.of(currentDir).resolve(fm.getFileName()), fm.getBytes());
+//                        getDataFromFile(fm, currentDir);
                         Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
                     }
                     case LIST -> {
@@ -70,8 +72,6 @@ public class CloudMainController implements Initializable{
         }
     }
 
-
-
     public void getFromServer(ActionEvent actionEvent) {
         String fileName = serverView.getSelectionModel().getSelectedItem();
             try {
@@ -89,7 +89,7 @@ public class CloudMainController implements Initializable{
                     new ObjectEncoderOutputStream(socket.getOutputStream())
             );
             factory.getThread(this::readMassages,
-                    "cloud-client-read-thread-%")
+                    Thread.currentThread().getName())
                     .start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,8 +115,10 @@ public class CloudMainController implements Initializable{
         });
         button_log_out.setOnAction(event ->
                 DBUtils.changScene(event,
-                        "auth_page_client.fxml",
-                        "Log in", null));
+                        "/com/geekbrains/sep22/geekcloudclient/auth_page_client.fxml",
+                        "Log in!", null, null));
+
+
        clientView.setEditable(true);
        clientView.setCellFactory(TextFieldListCell.forListView());
        clientView.setOnEditCommit(this::changeFileNameCellEvent);

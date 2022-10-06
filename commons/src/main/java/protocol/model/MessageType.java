@@ -8,7 +8,8 @@ public enum MessageType {
     DELETE,
     RENAME,
     SIGN,
-    AlERT
+    AlERT,
+    AUTH
 
 
 }

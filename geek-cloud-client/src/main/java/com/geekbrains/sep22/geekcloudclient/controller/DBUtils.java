@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class DBUtils {
 
-    public static void changScene(ActionEvent event, String fxmlFile, String title, String username) {
+    public static void changScene(ActionEvent event, String fxmlFile, String title, String username, String password) {
         Parent root = null;
         if(username != null) {
             try {
@@ -32,7 +32,7 @@ public class DBUtils {
         }
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.setTitle(title);
-        stage.setScene(new Scene(root, 600, 400));
+        stage.setScene(new Scene(root, 906, 605));
         stage.show();
     }
 

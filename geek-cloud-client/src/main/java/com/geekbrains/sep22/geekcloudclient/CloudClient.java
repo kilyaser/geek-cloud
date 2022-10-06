@@ -10,9 +10,9 @@ import java.io.IOException;
 public class CloudClient extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("geek-cloud-client.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/geekbrains/sep22/geekcloudclient/auth_page_client.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
-        stage.setTitle("Cloud Client!");
+        stage.setTitle("Log in!");
         stage.setScene(scene);
         stage.show();
     }

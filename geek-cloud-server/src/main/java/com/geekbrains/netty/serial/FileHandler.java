@@ -1,5 +1,6 @@
 package com.geekbrains.netty.serial;
 
+import com.geekbrains.netty.connectionDAO.DAOUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 
 
 import static protocol.Constants.DELIMITER;
+
 
 @Slf4j
 public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
@@ -27,6 +29,7 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
         switch (cloudMessage.getType()) {
             case FILE -> {
                 FileMessage fileMessage = (FileMessage) cloudMessage;
+//                getDataFromFile(fileMessage, String.valueOf(serverDir));
                 Files.write(serverDir.resolve(fileMessage.getFileName()), fileMessage.getBytes());
                 ctx.writeAndFlush(new ListMessage(serverDir));
             }
@@ -68,6 +71,16 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
                 } else {
                     log.debug("rename file was failed");
                 }
+            }
+            case AUTH -> {
+                AuthRequest authRequest = (AuthRequest) cloudMessage;
+                boolean checkUser = DAOUtils.logInUser(authRequest.getUsername(), authRequest.getPassword());
+                if (checkUser) {
+                    ctx.writeAndFlush(new AuthRequest(authRequest.getUsername(), authRequest.getPassword(), checkUser));
+                } else {
+                    ctx.writeAndFlush(new AuthRequest(authRequest.getUsername(), authRequest.getPassword(), checkUser));
+                }
+
             }
         }
     }
