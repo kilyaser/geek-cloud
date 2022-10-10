@@ -80,7 +80,15 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
                 } else {
                     ctx.writeAndFlush(new AuthRequest(authRequest.getUsername(), authRequest.getPassword(), checkUser));
                 }
-
+            }
+            case SIGN -> {
+                SignUpRequest signUpRequest = (SignUpRequest) cloudMessage;
+                boolean resultSignUp = DAOUtils.connect(signUpRequest.getUsername(), signUpRequest.getPassword());
+                if (resultSignUp) {
+                    ctx.writeAndFlush(new SignUpRequest(signUpRequest.getUsername(), signUpRequest.getPassword(), resultSignUp));
+                } else {
+                    ctx.writeAndFlush(new SignUpRequest(signUpRequest.getUsername(), signUpRequest.getPassword(), resultSignUp));
+                }
             }
         }
     }

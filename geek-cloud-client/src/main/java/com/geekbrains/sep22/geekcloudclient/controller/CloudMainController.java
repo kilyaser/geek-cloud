@@ -101,7 +101,7 @@ public class CloudMainController implements Initializable{
         isReadMessages = true;
         factory = new DaemonThreadFactory();
         initNetwork();
-        setCurrentDir(System.getProperty("user.home"));
+        setCurrentDir("C:\\Hobby\\BeekBrain\\GB_CloudHolder\\client_directory");
         fillView(clientView, getFiles(currentDir));
         clientView.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getClickCount() == 2) {
@@ -114,13 +114,14 @@ public class CloudMainController implements Initializable{
             }
         });
         button_log_out.setOnAction(event ->
-                DBUtils.changScene(event,
+                SceneUtils.changScene(event,
                         "/com/geekbrains/sep22/geekcloudclient/auth_page_client.fxml",
                         "Log in!", null, null));
 
 
        clientView.setEditable(true);
        clientView.setCellFactory(TextFieldListCell.forListView());
+
        clientView.setOnEditCommit(this::changeFileNameCellEvent);
        
        serverView.setEditable(true);

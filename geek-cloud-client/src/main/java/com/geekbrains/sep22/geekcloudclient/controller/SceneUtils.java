@@ -10,13 +10,13 @@ import protocol.model.SignUpRequest;
 
 import java.io.IOException;
 
-public class DBUtils {
+public class SceneUtils {
 
     public static void changScene(ActionEvent event, String fxmlFile, String title, String username, String password) {
         Parent root = null;
         if(username != null) {
             try {
-                FXMLLoader loader = new FXMLLoader(DBUtils.class.getResource(fxmlFile));
+                FXMLLoader loader = new FXMLLoader(SceneUtils.class.getResource(fxmlFile));
                 root = loader.load();
                 CloudMainController controller = loader.getController();
                 controller.setUserInformation(username);
@@ -25,14 +25,14 @@ public class DBUtils {
             }
         } else {
              try {
-                  root = FXMLLoader.load(DBUtils.class.getResource(fxmlFile));
+                  root = FXMLLoader.load(SceneUtils.class.getResource(fxmlFile));
              } catch (IOException e) {
                   e.printStackTrace();
              }
         }
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.setTitle(title);
-        stage.setScene(new Scene(root, 906, 605));
+        stage.setScene(new Scene(root));
         stage.show();
     }
 

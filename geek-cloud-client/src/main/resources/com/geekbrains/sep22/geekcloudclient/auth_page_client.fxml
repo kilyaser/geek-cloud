@@ -9,43 +9,46 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="605.0" prefWidth="906.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.geekbrains.sep22.geekcloudclient.controller.AuthController">
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.geekbrains.sep22.geekcloudclient.controller.AuthController">
    <children>
-      <AnchorPane prefHeight="605.0" prefWidth="429.0" style="-fx-background-color: #ADD8E6;" />
-      <AnchorPane prefHeight="605.0" prefWidth="753.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
+      <AnchorPane prefHeight="400.0" prefWidth="200.0" style="-fx-background-color: #ADD8E6;" />
+      <AnchorPane prefHeight="400.0" prefWidth="400.0" style="-fx-background-color: transparent; -fx-cursor: hand;">
          <children>
-            <ImageView fitHeight="77.0" fitWidth="82.0" layoutX="269.0" layoutY="25.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fitHeight="77.0" fitWidth="82.0" layoutX="165.0" layoutY="37.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@lock-logo.png" />
                </image>
             </ImageView>
-            <Label layoutX="110.0" layoutY="158.0" prefHeight="27.0" prefWidth="74.0" text="Username">
+            <Label layoutX="12.0" layoutY="155.0" prefHeight="27.0" prefWidth="74.0" text="Username">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
             </Label>
-            <TextField fx:id="tf_username" layoutX="222.0" layoutY="154.0" prefHeight="25.0" prefWidth="206.0" promptText="Username">
+            <TextField fx:id="tf_username" layoutX="124.0" layoutY="151.0" prefHeight="25.0" prefWidth="206.0" promptText="Username">
                <font>
                   <Font size="16.0" />
                </font>
             </TextField>
-            <Label layoutX="110.0" layoutY="216.0" prefHeight="27.0" prefWidth="74.0" text="Password">
+            <Label layoutX="12.0" layoutY="213.0" prefHeight="27.0" prefWidth="74.0" text="Password">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>
             </Label>
-            <TextField fx:id="tf_password" layoutX="222.0" layoutY="212.0" prefHeight="25.0" prefWidth="206.0" promptText="Password">
+            <TextField fx:id="tf_password" layoutX="124.0" layoutY="205.0" prefHeight="25.0" prefWidth="206.0" promptText="Password">
                <font>
                   <Font size="16.0" />
                </font>
             </TextField>
-            <Button fx:id="button_login" layoutX="221.0" layoutY="277.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="151.0" style="-fx-background-color: #ADD8E6; -fx-cursor: hand;" text="login">
+            <Button fx:id="button_login" layoutX="123.0" layoutY="270.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="151.0" style="-fx-background-color: #ADD8E6; -fx-cursor: hand;" text="login">
                <font>
                   <Font size="16.0" />
                </font>
             </Button>
-            <Label layoutX="221.0" layoutY="342.0" prefHeight="27.0" prefWidth="66.0" text="Not a user?" />
-            <Button fx:id="button_sign_up" layoutX="287.0" layoutY="341.0" mnemonicParsing="false" prefHeight="20.0" prefWidth="77.0" style="-fx-background-color: transpor;" text="Sign up!" textFill="#130ff8" underline="true">
+            <Label layoutX="122.0" layoutY="324.0" prefHeight="27.0" prefWidth="66.0" text="Not a user?">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font></Label>
+            <Button fx:id="button_sign_up" layoutX="202.0" layoutY="321.0" mnemonicParsing="false" prefHeight="20.0" prefWidth="77.0" style="-fx-background-color: transpor;" text="Sign up!" textFill="#130ff8" underline="true">
                <font>
                   <Font name="System Bold" size="14.0" />
                </font>

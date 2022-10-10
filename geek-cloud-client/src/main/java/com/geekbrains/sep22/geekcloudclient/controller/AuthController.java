@@ -4,7 +4,6 @@ import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -16,8 +15,6 @@ import protocol.model.*;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ResourceBundle;
 
 public class AuthController implements Initializable {
@@ -40,7 +37,7 @@ public class AuthController implements Initializable {
         factory = new DaemonThreadFactory();
         initNetwork();
         button_login.setOnAction(this::sendDataForAuthorization);
-        button_sign_up.setOnAction(event -> DBUtils.changScene(event,
+        button_sign_up.setOnAction(event -> SceneUtils.changScene(event,
                 "/com/geekbrains/sep22/geekcloudclient/sign-up.fxml",
                 "Sign up!",
                 null, null));
@@ -83,7 +80,7 @@ public class AuthController implements Initializable {
     private void getServerAnswer(AuthRequest authRequest) {
 
         if (authRequest.isCheckUser()) {
-            DBUtils.changScene(actionEvent,
+            SceneUtils.changScene(actionEvent,
                     "/com/geekbrains/sep22/geekcloudclient/geek-cloud-client.fxml",
                     "Cloud Client!", authRequest.getUsername(), authRequest.getPassword());
         } else {

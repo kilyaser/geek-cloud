@@ -12,10 +12,10 @@ public class DAOUtils {
         PreparedStatement psInsert = null;
         PreparedStatement psCheckUserExists = null;
         ResultSet resultSet = null;
+        boolean result = false;
 
 
         try {
-//            Class.forName("com.mysql.jdbc.Driver");
             connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/net_server_db",
                     "root", "1234");
@@ -25,15 +25,13 @@ public class DAOUtils {
 
             if (resultSet.isBeforeFirst()) {
                 System.out.println("User already exist!");
-
-                return false;
+                result = false;
             } else {
-                psInsert = connection.prepareStatement("INSERT INTO users (username, password) VALUES ?, ?");
+                psInsert = connection.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)");
                 psInsert.setString(1, username);
                 psInsert.setString(2, password);
                 psInsert.executeUpdate();
-
-                return true; //"/com/geekbrains/sep22/geekcloudclient/geek-cloud-client.fxml";
+                result = true; //"/com/geekbrains/sep22/geekcloudclient/geek-cloud-client.fxml";
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -67,14 +65,13 @@ public class DAOUtils {
                 }
             }
         }
-        return false;
+        return result;
     }
 
     public static boolean logInUser(String username, String password) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-//        String result = "password_error";
         try {
             connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/net_server_db",
@@ -85,9 +82,7 @@ public class DAOUtils {
 
             if (!resultSet.isBeforeFirst()) {
                 System.out.println("User not found in the database!");
-//                Alert alert = new Alert(Alert.AlertType.ERROR);
-//                alert.setContentText("Provided credentials are incorrect!");
-//                alert.show();
+
                 return false;
             } else {
                 while (resultSet.next()) {
