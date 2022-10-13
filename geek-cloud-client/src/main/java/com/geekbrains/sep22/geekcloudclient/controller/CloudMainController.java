@@ -36,11 +36,50 @@ public class CloudMainController implements Initializable{
     private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
     private boolean isReadMessages = true;
     private DaemonThreadFactory factory;
+    private int byteRead;
+
 
 
     public void sendToServer(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
-        network.getOutputStream().writeObject(new FileMessage(Path.of(currentDir).resolve(fileName)));
+        sendFileToServer(fileName);
+//        network.getOutputStream().writeObject(new FileMessage(Path.of(currentDir).resolve(fileName)));
+    }
+
+    private void sendFileToServer(String fileName) {
+        int startPos = 0;
+        int byteRead;
+        int bodyLength = 1024;
+        byte[] body = new byte[bodyLength];
+        long fileSize;
+        int packages;
+        try {
+            RandomAccessFile randomAccessFile = new RandomAccessFile(currentDir + DELIMITER + fileName, "r");
+            fileSize = randomAccessFile.length();
+            System.out.println("file size: " + fileSize);
+
+            if ((fileSize % bodyLength) != 0) {
+                packages = (int) (fileSize / bodyLength + 1);
+            } else {
+                packages = (int) (fileSize / bodyLength);
+            }
+            System.out.println(packages + " packages will be send to the server");
+            randomAccessFile.seek(startPos);
+
+            while ((byteRead = randomAccessFile.read(body)) != -1) {
+                network.getOutputStream().writeObject(new FileMessage(fileName, startPos, body));
+                startPos += byteRead;
+                randomAccessFile.seek(startPos);
+                packages--;
+
+                System.out.println(packages + " packages left to server");
+            }
+
+        } catch (FileNotFoundException e) {
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void readMassages() {
@@ -51,8 +90,9 @@ public class CloudMainController implements Initializable{
                 switch (message.getType()) {
                     case FILE -> {
                         FileMessage fm = (FileMessage)message;
-                        Files.write(Path.of(currentDir).resolve(fm.getFileName()), fm.getBytes());
-//                        getDataFromFile(fm, currentDir);
+//                        Files.write(Path.of(currentDir).resolve(fm.getFileName()), fm.getBytes());
+                        getDataFromFile(fm, currentDir);
+
                         Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
                     }
                     case LIST -> {
@@ -72,10 +112,24 @@ public class CloudMainController implements Initializable{
         }
     }
 
+    private void getDataFromFile(FileMessage fm, String currentDir) {
+        System.out.println("FileMessage object receiving the server");
+
+        File file = new File(currentDir + DELIMITER + fm.getFileName());
+        try ( RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+
+            randomAccessFile.seek(fm.getStartPos());
+            randomAccessFile.write(fm.getBody());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void getFromServer(ActionEvent actionEvent) {
         String fileName = serverView.getSelectionModel().getSelectedItem();
             try {
-                network.getOutputStream().writeObject(new FileRequest(fileName));
+                network.getOutputStream().writeObject(new FileRequest(fileName, 0));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

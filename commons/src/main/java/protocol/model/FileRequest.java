@@ -1,15 +1,15 @@
 package protocol.model;
 
-import lombok.Getter;
+import lombok.*;
 
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class FileRequest implements CloudMessage {
 
-    private final String fileName;
+    private String fileName;
+    private int startPosition;
 
-    public FileRequest(String fileName) {
-        this.fileName = fileName;
-    }
 
     @Override
     public MessageType getType() {

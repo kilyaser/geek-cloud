@@ -98,8 +98,8 @@ public class SignUpController implements Initializable {
     private void getServerAnswer(SignUpRequest signUpRequest) {
         if (signUpRequest.isResultSignUp()) {
             SceneUtils.changScene(actionEvent,
-                    "/com/geekbrains/sep22/geekcloudclient/geek-cloud-client.fxml",
-                    "Cloud Client!", signUpRequest.getUsername(), signUpRequest.getPassword());
+                    "/com/geekbrains/sep22/geekcloudclient/auth_page_client.fxml",
+                    "Log in!", null, null);
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("user already exist!");

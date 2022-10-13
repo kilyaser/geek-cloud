@@ -6,6 +6,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 import protocol.model.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -29,13 +31,13 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
         switch (cloudMessage.getType()) {
             case FILE -> {
                 FileMessage fileMessage = (FileMessage) cloudMessage;
-//                getDataFromFile(fileMessage, String.valueOf(serverDir));
-                Files.write(serverDir.resolve(fileMessage.getFileName()), fileMessage.getBytes());
+                getFileFromClient(ctx, fileMessage);
+//                Files.write(serverDir.resolve(fileMessage.getFileName()), fileMessage.getBytes());
                 ctx.writeAndFlush(new ListMessage(serverDir));
             }
             case FILE_REQUEST -> {
                 FileRequest fileRequest = (FileRequest) cloudMessage;
-                ctx.writeAndFlush(new FileMessage(serverDir.resolve(fileRequest.getFileName())));
+                sendFileByRequest(fileRequest, ctx);
             }
             case VIEW -> {
                 ViewRequest viewRequest = (ViewRequest) cloudMessage;
@@ -90,6 +92,63 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
                     ctx.writeAndFlush(new SignUpRequest(signUpRequest.getUsername(), signUpRequest.getPassword(), resultSignUp));
                 }
             }
+        }
+    }
+
+    private void getFileFromClient(ChannelHandlerContext ctx, FileMessage fileMessage) {
+        log.debug("FileMessage object receiving form client [{}]", fileMessage.getFileName());
+        File file = new File(serverDir + DELIMITER + fileMessage.getFileName());
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")){
+            randomAccessFile.seek(fileMessage.getStartPos());
+            randomAccessFile.write(fileMessage.getBody());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendFileByRequest(FileRequest fileRequest, ChannelHandlerContext ctx) {
+        FileMessage fileMessage = new FileMessage();
+        int startPos = 0;
+        int byteRead;
+        int bodyLength = 1024;
+        byte[] body = new byte[bodyLength];
+        long fileSize;
+        int packages;
+        try {
+            RandomAccessFile randomAccessFile = new RandomAccessFile(serverDir + DELIMITER + fileRequest.getFileName(), "r");
+            fileSize = randomAccessFile.length();
+            log.debug("file size: " + fileSize);
+            randomAccessFile.seek(fileRequest.getStartPosition());
+
+            if ((randomAccessFile.length() % bodyLength) != 0) {
+                packages = (int) (randomAccessFile.length() / bodyLength + 1);
+            } else {
+                packages = (int) (randomAccessFile.length() / bodyLength);
+            }
+            log.debug(packages + " packages will be sent to the client");
+
+            while ((byteRead = randomAccessFile.read(body)) != -1) {
+                log.debug(byteRead + " was read");
+                fileMessage.setFileName(fileRequest.getFileName());
+                fileMessage.setStartPos(startPos);
+                fileMessage.setBody(body);
+                ctx.writeAndFlush(fileMessage);
+                startPos += byteRead;
+                randomAccessFile.seek(startPos);
+                packages--;
+
+                log.debug("Document length: [{}], remaining length: [{}], send length: [{}]",
+                        randomAccessFile.length(),
+                        randomAccessFile.length() - byteRead,
+                        byteRead);
+                log.debug("number of remaining packets: [{}]",
+                        packages);
+            }
+
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
