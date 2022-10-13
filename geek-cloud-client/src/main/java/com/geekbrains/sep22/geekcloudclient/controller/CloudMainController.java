@@ -43,7 +43,7 @@ public class CloudMainController implements Initializable{
     public void sendToServer(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
         sendFileToServer(fileName);
-//        network.getOutputStream().writeObject(new FileMessage(Path.of(currentDir).resolve(fileName)));
+
     }
 
     private void sendFileToServer(String fileName) {
@@ -90,7 +90,6 @@ public class CloudMainController implements Initializable{
                 switch (message.getType()) {
                     case FILE -> {
                         FileMessage fm = (FileMessage)message;
-//                        Files.write(Path.of(currentDir).resolve(fm.getFileName()), fm.getBytes());
                         getDataFromFile(fm, currentDir);
 
                         Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));

@@ -16,26 +16,9 @@ import java.nio.file.Path;
 @AllArgsConstructor
 public class FileMessage implements CloudMessage {
 
-//    private File file;
     private String fileName;
     private int startPos;
-//    private final long size;
     private byte[] body;
-//    private int endPos;
-
-//    public FileMessage(File file, String fileName, int startPos, byte[] body, int endPos) {
-//        this.file = file;
-//        this.fileName = fileName;
-//        this.startPos = startPos;
-//        this.body = body;
-//        this.endPos = endPos;
-//    }
-//        public FileMessage(Path file) throws IOException {
-//        this.fileName = file.getFileName().toString();
-//        this.body = Files.readAllBytes(file);
-//        this.file = new File(fileName);
-//
-//    }
 
     @Override
     public MessageType getType() {
