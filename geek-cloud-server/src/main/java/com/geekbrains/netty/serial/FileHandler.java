@@ -1,19 +1,17 @@
 package com.geekbrains.netty.serial;
 
+import com.geekbrains.netty.connectionDAO.DAOUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import lombok.extern.slf4j.Slf4j;
-import protocol.AssistanceAlertUtils;
 import protocol.model.*;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
+
 
 import static protocol.Constants.DELIMITER;
+
 
 @Slf4j
 public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
@@ -31,6 +29,7 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
         switch (cloudMessage.getType()) {
             case FILE -> {
                 FileMessage fileMessage = (FileMessage) cloudMessage;
+//                getDataFromFile(fileMessage, String.valueOf(serverDir));
                 Files.write(serverDir.resolve(fileMessage.getFileName()), fileMessage.getBytes());
                 ctx.writeAndFlush(new ListMessage(serverDir));
             }
@@ -51,23 +50,16 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
                 DeleteRequest deleteRequest = (DeleteRequest) cloudMessage;
                 Path path = Path.of(serverDir + DELIMITER + deleteRequest.getFilename());
                 log.debug("Received file for delete {}", path);
-//                Alert infoAlert = AssistanceAlertUtils.getInformationAlert(deleteRequest.getFilename(), true);
-//                Alert alert = AssistanceAlertUtils.getWarningConfirm(deleteRequest.getFilename());
-//                Optional<ButtonType> answer = alert.showAndWait();
-//                if (answer.get() == ButtonType.OK) {
+
+                if (deleteRequest.isConfirm()) {
                     if (Files.exists(path)) {
                         Files.delete(path);
                         ctx.writeAndFlush(new ListMessage(serverDir));
-//                        infoAlert.showAndWait();
-                    } else {
-                        log.debug("Received file {} didn't exist", deleteRequest.getFilename());
-//                        infoAlert.setContentText("You should choose file");
-//                        infoAlert.showAndWait();
+                        ctx.writeAndFlush(new AlertMessage(deleteRequest.getFilename(), true));
                     }
-//                } else {
-//                    infoAlert = AssistanceAlertUtils.getInformationAlert(deleteRequest.getFilename(), false);
-//                    infoAlert.showAndWait();
-//                }
+                } else {
+                    ctx.writeAndFlush(new AlertMessage(deleteRequest.getFilename(), false));
+                }
             }
             case RENAME -> {
                 RenameRequest renameRequest = (RenameRequest) cloudMessage;
@@ -78,6 +70,24 @@ public class FileHandler extends SimpleChannelInboundHandler<CloudMessage> {
                     log.debug(file.getName() + "was rename to " + newFileName.getName());
                 } else {
                     log.debug("rename file was failed");
+                }
+            }
+            case AUTH -> {
+                AuthRequest authRequest = (AuthRequest) cloudMessage;
+                boolean checkUser = DAOUtils.logInUser(authRequest.getUsername(), authRequest.getPassword());
+                if (checkUser) {
+                    ctx.writeAndFlush(new AuthRequest(authRequest.getUsername(), authRequest.getPassword(), checkUser));
+                } else {
+                    ctx.writeAndFlush(new AuthRequest(authRequest.getUsername(), authRequest.getPassword(), checkUser));
+                }
+            }
+            case SIGN -> {
+                SignUpRequest signUpRequest = (SignUpRequest) cloudMessage;
+                boolean resultSignUp = DAOUtils.connect(signUpRequest.getUsername(), signUpRequest.getPassword());
+                if (resultSignUp) {
+                    ctx.writeAndFlush(new SignUpRequest(signUpRequest.getUsername(), signUpRequest.getPassword(), resultSignUp));
+                } else {
+                    ctx.writeAndFlush(new SignUpRequest(signUpRequest.getUsername(), signUpRequest.getPassword(), resultSignUp));
                 }
             }
         }

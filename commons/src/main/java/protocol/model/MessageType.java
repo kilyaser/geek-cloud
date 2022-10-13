@@ -6,6 +6,10 @@ public enum MessageType {
     FILE,
     VIEW,
     DELETE,
-    RENAME
+    RENAME,
+    SIGN,
+    AlERT,
+    AUTH
+
 
 }

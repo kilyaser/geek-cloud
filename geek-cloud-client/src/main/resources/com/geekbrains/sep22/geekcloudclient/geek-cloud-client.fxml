@@ -3,17 +3,16 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="605.0" prefWidth="906.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.geekbrains.sep22.geekcloudclient.controller.CloudMainController">
    <children>
-      <ListView fx:id="clientView" layoutX="6.0" layoutY="70.0" onEditCommit="#changeFileNameCellEvent" prefHeight="530.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="6.0" AnchorPane.topAnchor="70.0">
+      <ListView fx:id="clientView" layoutX="6.0" layoutY="44.0" onEditCommit="#changeFileNameCellEvent" prefHeight="556.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="6.0" AnchorPane.topAnchor="44.0">
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </padding>
@@ -26,7 +25,7 @@
               </items>
             </ContextMenu>
          </contextMenu></ListView>
-      <ListView fx:id="serverView" layoutX="470.0" layoutY="70.0" prefHeight="530.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="470.0" AnchorPane.rightAnchor="6.0" AnchorPane.topAnchor="70.0">
+      <ListView fx:id="serverView" layoutX="470.0" layoutY="44.0" prefHeight="556.0" prefWidth="430.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="470.0" AnchorPane.rightAnchor="6.0" AnchorPane.topAnchor="44.0">
          <contextMenu>
             <ContextMenu>
                <items>
@@ -39,28 +38,11 @@
       <Button layoutX="440.0" layoutY="69.0" mnemonicParsing="false" onAction="#sendToServer" text="&gt;" />
       <Button layoutX="440.0" layoutY="108.0" mnemonicParsing="false" onAction="#getFromServer" text="&lt;" />
       <HBox layoutY="-6.0" />
-      <TextField layoutX="4.0" layoutY="35.0" promptText="Login" />
-      <TextField layoutX="162.0" layoutY="35.0" promptText="password" />
-      <MenuBar layoutX="-2.0" layoutY="1.0" prefHeight="25.0" prefWidth="908.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-        <menus>
-          <Menu mnemonicParsing="false" text="File">
-            <items>
-              <MenuItem mnemonicParsing="false" text="Close" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
-            <items>
-              <MenuItem mnemonicParsing="false" onAction="#handleDeleteFileOption" text="Delete" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <items>
-              <MenuItem mnemonicParsing="false" text="About" />
-            </items>
-          </Menu>
-        </menus>
-      </MenuBar>
-      <Button layoutX="321.0" layoutY="35.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="54.0" text="Login" />
-      <Button layoutX="378.0" layoutY="35.0" mnemonicParsing="false" text="Setting" />
+      <Label fx:id="l_well_username" layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="228.0" text="Wellcom!">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Button fx:id="button_log_out" layoutX="316.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="120.0" style="-fx-background-color: #ADD8E6;" text="logout" />
    </children>
 </AnchorPane>

@@ -1,6 +1,11 @@
 package protocol;
 
+import protocol.model.FileMessage;
+
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 
 import static protocol.Constants.*;
 
@@ -56,4 +61,18 @@ public class FileUtils {
         }
 
     }
+//    public static void getDataFromFile(FileMessage fm, String currentDir) {
+//        try (FileChannel in = new FileInputStream(fm.getFile()).getChannel();
+//             FileChannel out = new FileOutputStream(Path.of(currentDir).resolve(fm.getFile().getName()).toFile()).getChannel()) {
+//
+//            ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+//            while (in.read(buffer) != -1) {
+//                buffer.flip();
+//                out.write(buffer);
+//                buffer.clear();
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

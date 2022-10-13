@@ -4,6 +4,7 @@ import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -21,14 +22,21 @@ import java.util.*;
 import static protocol.Constants.*;
 
 
+
 public class CloudMainController implements Initializable{
     public ListView<String> clientView;
     public ListView<String> serverView;
+    @FXML
+    public Label l_well_username;
+
+    @FXML
+    public Button button_log_out;
     private Socket socket;
     private String currentDir;
     private Network<ObjectDecoderInputStream, ObjectEncoderOutputStream> network;
     private boolean isReadMessages = true;
     private DaemonThreadFactory factory;
+
 
     public void sendToServer(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
@@ -44,11 +52,16 @@ public class CloudMainController implements Initializable{
                     case FILE -> {
                         FileMessage fm = (FileMessage)message;
                         Files.write(Path.of(currentDir).resolve(fm.getFileName()), fm.getBytes());
+//                        getDataFromFile(fm, currentDir);
                         Platform.runLater(() -> fillView(clientView, getFiles(currentDir)));
                     }
                     case LIST -> {
                         ListMessage lm = (ListMessage) message;
                         Platform.runLater(() -> fillView(serverView, lm.getFiles()));
+                    }
+                    case AlERT -> {
+                        AlertMessage alertMessage = (AlertMessage) message;
+                        Platform.runLater(() -> getConfirmation(alertMessage.getFilename(), alertMessage.isResult()));
                     }
                 }
             }
@@ -76,7 +89,7 @@ public class CloudMainController implements Initializable{
                     new ObjectEncoderOutputStream(socket.getOutputStream())
             );
             factory.getThread(this::readMassages,
-                    "cloud-client-read-thread-%")
+                    Thread.currentThread().getName())
                     .start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -88,7 +101,7 @@ public class CloudMainController implements Initializable{
         isReadMessages = true;
         factory = new DaemonThreadFactory();
         initNetwork();
-        setCurrentDir(System.getProperty("user.home"));
+        setCurrentDir("C:\\Hobby\\BeekBrain\\GB_CloudHolder\\client_directory");
         fillView(clientView, getFiles(currentDir));
         clientView.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getClickCount() == 2) {
@@ -100,8 +113,15 @@ public class CloudMainController implements Initializable{
                 serverActionSelected();
             }
         });
+        button_log_out.setOnAction(event ->
+                SceneUtils.changScene(event,
+                        "/com/geekbrains/sep22/geekcloudclient/auth_page_client.fxml",
+                        "Log in!", null, null));
+
+
        clientView.setEditable(true);
        clientView.setCellFactory(TextFieldListCell.forListView());
+
        clientView.setOnEditCommit(this::changeFileNameCellEvent);
        
        serverView.setEditable(true);
@@ -126,9 +146,30 @@ public class CloudMainController implements Initializable{
             infoAlert.showAndWait();
         }
     }
+    public void getConfirmation(String fileName, boolean result)  {
+        Alert infoAlert;
+        if (result) {
+            infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, result);
+            infoAlert.showAndWait();
+            return;
+        }
+
+        Alert alert = AssistanceAlertUtils.getWarningConfirm(fileName);
+        Optional<ButtonType> answer = alert.showAndWait();
+        if (answer.get() == ButtonType.OK) {
+            try {
+                network.getOutputStream().writeObject(new DeleteRequest(fileName, true));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            infoAlert = AssistanceAlertUtils.getInformationAlert(fileName, false);
+            infoAlert.showAndWait();
+        }
+    }
     public void handleServerFileDeleteOption(ActionEvent actionEvent) throws IOException {
         String fileName = serverView.getSelectionModel().getSelectedItem();
-        network.getOutputStream().writeObject(new DeleteRequest(fileName));
+        network.getOutputStream().writeObject(new DeleteRequest(fileName, false));
     }
 
       private void setCurrentDir(String dir) {
@@ -195,5 +236,8 @@ public class CloudMainController implements Initializable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    public void setUserInformation(String username) {
+        l_well_username.setText("Welcome " + username + "!");
     }
 }
